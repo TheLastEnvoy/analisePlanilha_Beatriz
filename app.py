@@ -3,19 +3,15 @@ import pandas as pd
 from openpyxl import Workbook
 from openpyxl.styles import PatternFill
 from openpyxl.utils.dataframe import dataframe_to_rows
-import os
-
-# Variáveis globais para armazenar os dados das planilhas
-planilha_anterior = None
-planilha_atual = None
 
 # Função para carregar as planilhas
 def carregar_planilhas():
-    global planilha_anterior, planilha_atual
-
     st.sidebar.header("Carregar Planilhas")
     upload_planilha_ontem = st.sidebar.file_uploader("Selecionar Planilha de Ontem", type=["xlsx"])
     upload_planilha_hoje = st.sidebar.file_uploader("Selecionar Planilha de Hoje", type=["xlsx"])
+
+    planilha_anterior = None
+    planilha_atual = None
 
     if upload_planilha_ontem is not None:
         planilha_anterior = pd.read_excel(upload_planilha_ontem, engine='openpyxl')
@@ -23,14 +19,10 @@ def carregar_planilhas():
     if upload_planilha_hoje is not None:
         planilha_atual = pd.read_excel(upload_planilha_hoje, engine='openpyxl')
 
+    return planilha_anterior, planilha_atual
+
 # Função para executar o código principal
-def executar_codigo():
-    global planilha_anterior, planilha_atual
-
-    if planilha_anterior is None or planilha_atual is None:
-        st.warning("Por favor, selecione ambas as planilhas antes de executar.")
-        return
-
+def executar_codigo(planilha_anterior, planilha_atual):
     try:
         # Considerando que a coluna chave para identificar os lotes seja 'Lote'
         coluna_chave = 'Lote'
@@ -59,30 +51,37 @@ def executar_codigo():
                 for cell in row:
                     cell.fill = gray_fill
 
-        # Salvar a planilha
-        workbook.save(filename=nome_arquivo_saida)
+        # Salvar a planilha em um objeto binário
+        from io import BytesIO
+        output = BytesIO()
+        workbook.save(output)
         workbook.close()
+        output.seek(0)
 
-        st.success(f"Foram identificados {len(novos_lotes)} novos lotes.\nPlanilha gerada: {nome_arquivo_saida}")
+        st.success(f"Foram identificados {len(novos_lotes)} novos lotes.")
 
-        # Permitir download do arquivo gerado
-        with open(nome_arquivo_saida, "rb") as file:
-            btn = st.download_button(
-                label="Download da planilha gerada",
-                data=file,
-                file_name=nome_arquivo_saida,
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
+        return output, nome_arquivo_saida
 
     except Exception as e:
         st.error(f"Ocorreu um erro ao executar o código:\n{str(e)}")
+        return None, None
 
 # Título do dashboard
 st.title("Identificação de Novos Lotes")
 
 # Carregar planilhas
-carregar_planilhas()
+planilha_anterior, planilha_atual = carregar_planilhas()
 
 # Botão para executar o código
 if st.sidebar.button("Executar Código"):
-    executar_codigo()
+    if planilha_anterior is not None and planilha_atual is not None:
+        output, nome_arquivo_saida = executar_codigo(planilha_anterior, planilha_atual)
+        if output is not None:
+            st.download_button(
+                label="Download da planilha gerada",
+                data=output,
+                file_name=nome_arquivo_saida,
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
+    else:
+        st.warning("Por favor, selecione ambas as planilhas antes de executar.")
