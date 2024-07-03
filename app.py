@@ -67,7 +67,7 @@ def executar_codigo(planilha_anterior, planilha_atual):
         return None, None
 
 # Título do dashboard
-st.title("Identificação de Novos Lotes")
+st.title("Ferramenta para análise de novos lotes")
 
 # Carregar planilhas
 planilha_anterior, planilha_atual = carregar_planilhas()
