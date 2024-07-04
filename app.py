@@ -3,6 +3,7 @@ import pandas as pd
 from openpyxl import Workbook
 from openpyxl.styles import PatternFill
 from openpyxl.utils.dataframe import dataframe_to_rows
+from io import BytesIO
 
 # Função para carregar as planilhas
 def carregar_planilhas():
@@ -14,10 +15,12 @@ def carregar_planilhas():
     planilha_atual = None
 
     if upload_planilha_ontem is not None:
-        planilha_anterior = pd.read_excel(upload_planilha_ontem, engine='openpyxl')
+        planilha_anterior = pd.read_excel(upload_planilha_ontem, sheet_name=None, engine='openpyxl')
+        planilha_anterior = pd.concat(planilha_anterior.values(), ignore_index=True)
 
     if upload_planilha_hoje is not None:
-        planilha_atual = pd.read_excel(upload_planilha_hoje, engine='openpyxl')
+        planilha_atual = pd.read_excel(upload_planilha_hoje, sheet_name=None, engine='openpyxl')
+        planilha_atual = pd.concat(planilha_atual.values(), ignore_index=True)
 
     return planilha_anterior, planilha_atual
 
@@ -52,7 +55,6 @@ def executar_codigo(planilha_anterior, planilha_atual):
                     cell.fill = gray_fill
 
         # Salvar a planilha em um objeto binário
-        from io import BytesIO
         output = BytesIO()
         workbook.save(output)
         workbook.close()
