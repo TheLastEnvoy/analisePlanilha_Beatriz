@@ -15,11 +15,11 @@ def carregar_planilhas():
     planilha_atual = None
 
     if upload_planilha_ontem is not None:
-        planilha_anterior = pd.read_excel(upload_planilha_ontem, sheet_name=None, engine='openpyxl')
+        planilha_anterior = pd.read_excel(upload_planilha_ontem, sheet_name=None, skiprows=4, engine='openpyxl')
         planilha_anterior = pd.concat(planilha_anterior.values(), ignore_index=True)
 
     if upload_planilha_hoje is not None:
-        planilha_atual = pd.read_excel(upload_planilha_hoje, sheet_name=None, engine='openpyxl')
+        planilha_atual = pd.read_excel(upload_planilha_hoje, sheet_name=None, skiprows=4, engine='openpyxl')
         planilha_atual = pd.concat(planilha_atual.values(), ignore_index=True)
 
     return planilha_anterior, planilha_atual
