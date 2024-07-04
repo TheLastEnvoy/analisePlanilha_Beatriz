@@ -16,8 +16,9 @@ def carregar_planilhas():
 
     if upload_planilha_ontem is not None:
         try:
-            planilha_anterior = pd.read_excel(upload_planilha_ontem, sheet_name=None, engine='openpyxl')
-            planilha_anterior = pd.concat(planilha_anterior.values(), ignore_index=True)
+            planilhas_ontem = pd.read_excel(upload_planilha_ontem, sheet_name=None, engine='openpyxl')
+            planilha_anterior = pd.concat(planilhas_ontem.values(), ignore_index=True)
+            st.sidebar.success("Planilha de Ontem carregada com sucesso!")
             # Verifica se a coluna 'Lote' está presente
             if 'Lote' not in planilha_anterior.columns:
                 st.error("A coluna 'Lote' não foi encontrada na planilha de ontem. Verifique o cabeçalho.")
@@ -28,8 +29,9 @@ def carregar_planilhas():
 
     if upload_planilha_hoje is not None:
         try:
-            planilha_atual = pd.read_excel(upload_planilha_hoje, sheet_name=None, engine='openpyxl')
-            planilha_atual = pd.concat(planilha_atual.values(), ignore_index=True)
+            planilhas_hoje = pd.read_excel(upload_planilha_hoje, sheet_name=None, engine='openpyxl')
+            planilha_atual = pd.concat(planilhas_hoje.values(), ignore_index=True)
+            st.sidebar.success("Planilha de Hoje carregada com sucesso!")
             # Verifica se a coluna 'Lote' está presente
             if 'Lote' not in planilha_atual.columns:
                 st.error("A coluna 'Lote' não foi encontrada na planilha de hoje. Verifique o cabeçalho.")
