@@ -5,6 +5,14 @@ from openpyxl.styles import PatternFill
 from openpyxl.utils.dataframe import dataframe_to_rows
 from io import BytesIO
 
+# Função para encontrar a linha do cabeçalho
+def encontrar_cabecalho(path, colunas_procuradas):
+    with open(path, 'rb') as file:
+        for i, line in enumerate(file):
+            if all(coluna.encode() in line for coluna in colunas_procuradas):
+                return i
+    return None
+
 # Função para carregar as planilhas
 def carregar_planilhas():
     st.sidebar.header("Carregar Planilhas")
@@ -14,12 +22,19 @@ def carregar_planilhas():
     planilha_anterior = None
     planilha_atual = None
 
+    colunas_procuradas = ['Lote', 'Carga', 'Produto', 'Saldo a Pintar Lote', 'Recurso Posterior', 'Início do Próximo Rec.']
+
     if upload_planilha_ontem is not None:
         try:
-            planilhas_ontem = pd.read_excel(upload_planilha_ontem, sheet_name=None, engine='openpyxl')
+            # Encontrar a linha do cabeçalho
+            linha_cabecalho = encontrar_cabecalho(upload_planilha_ontem, colunas_procuradas)
+            if linha_cabecalho is None:
+                st.error("Cabeçalho não encontrado na planilha de ontem.")
+                return None, None
+
+            planilhas_ontem = pd.read_excel(upload_planilha_ontem, sheet_name=None, engine='openpyxl', skiprows=linha_cabecalho)
             planilha_anterior = pd.concat(planilhas_ontem.values(), ignore_index=True)
             st.sidebar.success("Planilha de Ontem carregada com sucesso!")
-            # Verifica se a coluna 'Lote' está presente
             if 'Lote' not in planilha_anterior.columns:
                 st.error("A coluna 'Lote' não foi encontrada na planilha de ontem. Verifique o cabeçalho.")
                 return None, None
@@ -29,10 +44,15 @@ def carregar_planilhas():
 
     if upload_planilha_hoje is not None:
         try:
-            planilhas_hoje = pd.read_excel(upload_planilha_hoje, sheet_name=None, engine='openpyxl')
+            # Encontrar a linha do cabeçalho
+            linha_cabecalho = encontrar_cabecalho(upload_planilha_hoje, colunas_procuradas)
+            if linha_cabecalho is None:
+                st.error("Cabeçalho não encontrado na planilha de hoje.")
+                return None, None
+
+            planilhas_hoje = pd.read_excel(upload_planilha_hoje, sheet_name=None, engine='openpyxl', skiprows=linha_cabecalho)
             planilha_atual = pd.concat(planilhas_hoje.values(), ignore_index=True)
             st.sidebar.success("Planilha de Hoje carregada com sucesso!")
-            # Verifica se a coluna 'Lote' está presente
             if 'Lote' not in planilha_atual.columns:
                 st.error("A coluna 'Lote' não foi encontrada na planilha de hoje. Verifique o cabeçalho.")
                 return None, None
