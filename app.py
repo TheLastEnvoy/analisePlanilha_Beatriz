@@ -15,12 +15,28 @@ def carregar_planilhas():
     planilha_atual = None
 
     if upload_planilha_ontem is not None:
-        planilha_anterior = pd.read_excel(upload_planilha_ontem, sheet_name=None, skiprows=4, engine='openpyxl')
-        planilha_anterior = pd.concat(planilha_anterior.values(), ignore_index=True)
+        try:
+            planilha_anterior = pd.read_excel(upload_planilha_ontem, sheet_name=None, engine='openpyxl')
+            planilha_anterior = pd.concat(planilha_anterior.values(), ignore_index=True)
+            # Verifica se a coluna 'Lote' está presente
+            if 'Lote' not in planilha_anterior.columns:
+                st.error("A coluna 'Lote' não foi encontrada na planilha de ontem. Verifique o cabeçalho.")
+                return None, None
+        except Exception as e:
+            st.error(f"Erro ao carregar a planilha de ontem: {e}")
+            return None, None
 
     if upload_planilha_hoje is not None:
-        planilha_atual = pd.read_excel(upload_planilha_hoje, sheet_name=None, skiprows=4, engine='openpyxl')
-        planilha_atual = pd.concat(planilha_atual.values(), ignore_index=True)
+        try:
+            planilha_atual = pd.read_excel(upload_planilha_hoje, sheet_name=None, engine='openpyxl')
+            planilha_atual = pd.concat(planilha_atual.values(), ignore_index=True)
+            # Verifica se a coluna 'Lote' está presente
+            if 'Lote' not in planilha_atual.columns:
+                st.error("A coluna 'Lote' não foi encontrada na planilha de hoje. Verifique o cabeçalho.")
+                return None, None
+        except Exception as e:
+            st.error(f"Erro ao carregar a planilha de hoje: {e}")
+            return None, None
 
     return planilha_anterior, planilha_atual
 
