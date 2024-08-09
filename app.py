@@ -44,6 +44,20 @@ def carregar_planilhas():
 
     return planilha_anterior, planilha_atual
 
+# Função para ajustar a largura das colunas
+def ajustar_largura_colunas(sheet):
+    for col in sheet.columns:
+        max_length = 0
+        col_letter = col[0].column_letter  # Coluna A, B, C, etc.
+        for cell in col:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(cell.value)
+            except:
+                pass
+        adjusted_width = (max_length + 2)
+        sheet.column_dimensions[col_letter].width = adjusted_width
+
 # Função para executar o código principal
 def executar_codigo(planilha_anterior, planilha_atual):
     try:
@@ -77,6 +91,9 @@ def executar_codigo(planilha_anterior, planilha_atual):
             if planilha_atual.loc[row_idx - 2, 'Lote'] in novos_lotes['Lote'].values:
                 for cell in row:
                     cell.fill = gray_fill
+
+        # Ajustar a largura das colunas
+        ajustar_largura_colunas(sheet)
 
         # Salvar a planilha em um objeto binário
         from io import BytesIO
