@@ -4,7 +4,7 @@ from openpyxl import Workbook
 from openpyxl.styles import PatternFill
 from openpyxl.utils.dataframe import dataframe_to_rows
 
-# Função para carregar as planilhas
+# Função para carregar e processar as planilhas
 def carregar_planilhas():
     st.sidebar.header("Carregar Planilhas")
     upload_planilha_ontem = st.sidebar.file_uploader("Selecionar Planilha de Ontem", type=["xlsx"])
@@ -17,11 +17,10 @@ def carregar_planilhas():
             sheets = []
             for name, df in xls.items():
                 if name != "Document map":
-                    # Ignorar linhas inúteis com base em um padrão (ajustar conforme necessário)
-                    df = df.dropna(how='all')  # Remove linhas completamente vazias
-                    df = df[df.columns.dropna()]  # Remove colunas completamente vazias
-                    df.columns = df.iloc[0]  # Usa a primeira linha como cabeçalho
-                    df = df[1:]  # Remove a primeira linha que agora é o cabeçalho
+                    # Encontrar a linha onde está o cabeçalho real
+                    header_row_index = df[df.iloc[:, 2] == 'Lote'].index[0]
+                    df.columns = df.iloc[header_row_index]  # Usa a linha do cabeçalho real como cabeçalho
+                    df = df[(header_row_index + 1):]  # Remove as linhas acima do cabeçalho real
                     sheets.append(df)
             return pd.concat(sheets, ignore_index=True)
         return None
