@@ -15,22 +15,28 @@ def carregar_planilhas():
             # Ler todas as abas e concatenar em um único DataFrame, ignorando a primeira aba
             xls = pd.read_excel(upload, sheet_name=None, engine='openpyxl')
             sheets = []
-            for name, df in xls.items():
-                if name != "Document map":
-                    # Encontrar a linha onde está o cabeçalho real (linha 10 ou 11)
-                    header_row_index = None
-                    for i in [9, 10]:  # 0-based indexing, so 9 means line 10 and 10 means line 11
-                        if df.shape[0] > i and 'Lote' in df.iloc[i].values:
-                            header_row_index = i
-                            break
-                    if header_row_index is None:
-                        raise KeyError("A coluna 'Lote' não foi encontrada nas linhas esperadas.")
+            for idx, (name, df) in enumerate(xls.items()):
+                if idx == 0:  # Ignorar a primeira aba
+                    continue
+                # Procurar a linha que contém os cabeçalhos específicos
+                header_row_index = None
+                for i in range(len(df)):
+                    if 'Lote' in df.iloc[i].values and 'Carga' in df.iloc[i].values and 'Produto' in df.iloc[i].values:
+                        header_row_index = i
+                        break
+                if header_row_index is None:
+                    st.error(f"Os cabeçalhos esperados não foram encontrados na aba '{name}'.")
+                    return None
 
-                    df.columns = df.iloc[header_row_index]  # Usa a linha do cabeçalho real como cabeçalho
-                    df = df[(header_row_index + 1):]  # Remove as linhas acima do cabeçalho real
-                    df = df.reset_index(drop=True)  # Resetar os índices
-                    sheets.append(df)
-            return pd.concat(sheets, ignore_index=True)
+                df.columns = df.iloc[header_row_index]  # Usa a linha do cabeçalho real como cabeçalho
+                df = df[(header_row_index + 1):]  # Remove as linhas acima do cabeçalho real
+                df = df.reset_index(drop=True)  # Resetar os índices
+                sheets.append(df)
+            if sheets:
+                return pd.concat(sheets, ignore_index=True)
+            else:
+                st.error("Nenhuma aba válida foi encontrada nas planilhas.")
+                return None
         return None
 
     planilha_anterior = processar_planilha(upload_planilha_ontem)
