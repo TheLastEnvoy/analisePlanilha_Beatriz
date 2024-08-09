@@ -17,10 +17,18 @@ def carregar_planilhas():
             sheets = []
             for name, df in xls.items():
                 if name != "Document map":
-                    # Encontrar a linha onde está o cabeçalho real
-                    header_row_index = df[df.iloc[:, 2] == 'Lote'].index[0]
+                    # Encontrar a linha onde está o cabeçalho real (linha 10 ou 11)
+                    header_row_index = None
+                    for i in [9, 10]:  # 0-based indexing, so 9 means line 10 and 10 means line 11
+                        if df.shape[0] > i and 'Lote' in df.iloc[i].values:
+                            header_row_index = i
+                            break
+                    if header_row_index is None:
+                        raise KeyError("A coluna 'Lote' não foi encontrada nas linhas esperadas.")
+
                     df.columns = df.iloc[header_row_index]  # Usa a linha do cabeçalho real como cabeçalho
                     df = df[(header_row_index + 1):]  # Remove as linhas acima do cabeçalho real
+                    df = df.reset_index(drop=True)  # Resetar os índices
                     sheets.append(df)
             return pd.concat(sheets, ignore_index=True)
         return None
