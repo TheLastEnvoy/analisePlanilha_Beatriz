@@ -10,20 +10,24 @@ def carregar_planilhas():
     upload_planilha_ontem = st.sidebar.file_uploader("Selecionar Planilha de Ontem", type=["xlsx"])
     upload_planilha_hoje = st.sidebar.file_uploader("Selecionar Planilha de Hoje", type=["xlsx"])
 
-    planilha_anterior = None
-    planilha_atual = None
+    def processar_planilha(upload):
+        if upload is not None:
+            # Ler todas as abas e concatenar em um único DataFrame, ignorando a primeira aba
+            xls = pd.read_excel(upload, sheet_name=None, engine='openpyxl')
+            sheets = []
+            for name, df in xls.items():
+                if name != "Document map":
+                    # Ignorar linhas inúteis com base em um padrão (ajustar conforme necessário)
+                    df = df.dropna(how='all')  # Remove linhas completamente vazias
+                    df = df[df.columns.dropna()]  # Remove colunas completamente vazias
+                    df.columns = df.iloc[0]  # Usa a primeira linha como cabeçalho
+                    df = df[1:]  # Remove a primeira linha que agora é o cabeçalho
+                    sheets.append(df)
+            return pd.concat(sheets, ignore_index=True)
+        return None
 
-    if upload_planilha_ontem is not None:
-        # Ler todas as abas e concatenar em um único DataFrame, ignorando a primeira aba
-        xls_ontem = pd.read_excel(upload_planilha_ontem, sheet_name=None, engine='openpyxl')
-        sheets_ontem = [df for name, df in xls_ontem.items() if name != "Document map"]
-        planilha_anterior = pd.concat(sheets_ontem, ignore_index=True)
-
-    if upload_planilha_hoje is not None:
-        # Ler todas as abas e concatenar em um único DataFrame, ignorando a primeira aba
-        xls_hoje = pd.read_excel(upload_planilha_hoje, sheet_name=None, engine='openpyxl')
-        sheets_hoje = [df for name, df in xls_hoje.items() if name != "Document map"]
-        planilha_atual = pd.concat(sheets_hoje, ignore_index=True)
+    planilha_anterior = processar_planilha(upload_planilha_ontem)
+    planilha_atual = processar_planilha(upload_planilha_hoje)
 
     return planilha_anterior, planilha_atual
 
