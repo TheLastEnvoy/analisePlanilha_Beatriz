@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from openpyxl import Workbook
-from openpyxl.styles import PatternFill
+from openpyxl.styles import PatternFill, Font
 from openpyxl.utils.dataframe import dataframe_to_rows
 
 # Função para carregar e processar as planilhas
@@ -80,6 +80,10 @@ def executar_codigo(planilha_anterior, planilha_atual):
         # Adicionar cabeçalho da planilha
         header = list(planilha_atual.columns)
         sheet.append(header)
+
+        # Aplicar negrito ao cabeçalho
+        for cell in sheet[1]:
+            cell.font = Font(bold=True)
 
         # Copiar dados da planilha_atual para a nova planilha
         for r in dataframe_to_rows(planilha_atual, index=False, header=False):
