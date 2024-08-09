@@ -14,12 +14,16 @@ def carregar_planilhas():
     planilha_atual = None
 
     if upload_planilha_ontem is not None:
-        # Ler todas as abas e concatenar em um único DataFrame
-        planilha_anterior = pd.concat(pd.read_excel(upload_planilha_ontem, sheet_name=None, engine='openpyxl').values(), ignore_index=True)
+        # Ler todas as abas e concatenar em um único DataFrame, ignorando a primeira aba
+        xls_ontem = pd.read_excel(upload_planilha_ontem, sheet_name=None, engine='openpyxl')
+        sheets_ontem = [df for name, df in xls_ontem.items() if name != "Document map"]
+        planilha_anterior = pd.concat(sheets_ontem, ignore_index=True)
 
     if upload_planilha_hoje is not None:
-        # Ler todas as abas e concatenar em um único DataFrame
-        planilha_atual = pd.concat(pd.read_excel(upload_planilha_hoje, sheet_name=None, engine='openpyxl').values(), ignore_index=True)
+        # Ler todas as abas e concatenar em um único DataFrame, ignorando a primeira aba
+        xls_hoje = pd.read_excel(upload_planilha_hoje, sheet_name=None, engine='openpyxl')
+        sheets_hoje = [df for name, df in xls_hoje.items() if name != "Document map"]
+        planilha_atual = pd.concat(sheets_hoje, ignore_index=True)
 
     return planilha_anterior, planilha_atual
 
