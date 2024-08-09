@@ -14,10 +14,12 @@ def carregar_planilhas():
     planilha_atual = None
 
     if upload_planilha_ontem is not None:
-        planilha_anterior = pd.concat(pd.read_excel(upload_planilha_ontem, sheet_name=None, engine='openpyxl'), ignore_index=True)
+        # Ler todas as abas e concatenar em um único DataFrame
+        planilha_anterior = pd.concat(pd.read_excel(upload_planilha_ontem, sheet_name=None, engine='openpyxl').values(), ignore_index=True)
 
     if upload_planilha_hoje is not None:
-        planilha_atual = pd.concat(pd.read_excel(upload_planilha_hoje, sheet_name=None, engine='openpyxl'), ignore_index=True)
+        # Ler todas as abas e concatenar em um único DataFrame
+        planilha_atual = pd.concat(pd.read_excel(upload_planilha_hoje, sheet_name=None, engine='openpyxl').values(), ignore_index=True)
 
     return planilha_anterior, planilha_atual
 
@@ -26,6 +28,10 @@ def executar_codigo(planilha_anterior, planilha_atual):
     try:
         # Considerando que a coluna chave para identificar os lotes seja 'Lote'
         coluna_chave = 'Lote'
+
+        # Verificar se a coluna 'Lote' existe em ambas as planilhas
+        if coluna_chave not in planilha_anterior.columns or coluna_chave not in planilha_atual.columns:
+            raise KeyError(f"A coluna '{coluna_chave}' não foi encontrada em uma ou ambas as planilhas.")
 
         # Encontrar os lotes novos que estão na planilha atual, mas não estavam na planilha anterior
         novos_lotes = planilha_atual[~planilha_atual[coluna_chave].isin(planilha_anterior[coluna_chave])]
@@ -62,6 +68,9 @@ def executar_codigo(planilha_anterior, planilha_atual):
 
         return output, nome_arquivo_saida
 
+    except KeyError as e:
+        st.error(str(e))
+        return None, None
     except Exception as e:
         st.error(f"Ocorreu um erro ao executar o código:\n{str(e)}")
         return None, None
