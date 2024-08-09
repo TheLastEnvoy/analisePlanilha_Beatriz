@@ -3,21 +3,8 @@ import pandas as pd
 from openpyxl import Workbook
 from openpyxl.styles import PatternFill
 from openpyxl.utils.dataframe import dataframe_to_rows
-from io import BytesIO
 
-def ler_todas_abas(arquivo):
-    xls = pd.ExcelFile(arquivo)
-    dfs = []
-    for sheet_name in xls.sheet_names:
-        df = pd.read_excel(xls, sheet_name=sheet_name)
-        df = df.dropna(how='all').reset_index(drop=True)
-        header_row = df.first_valid_index()
-        if header_row is not None:
-            df.columns = df.iloc[header_row]
-            df = df.iloc[header_row + 1:].reset_index(drop=True)
-        dfs.append(df)
-    return pd.concat(dfs, ignore_index=True)
-
+# Função para carregar as planilhas
 def carregar_planilhas():
     st.sidebar.header("Carregar Planilhas")
     upload_planilha_ontem = st.sidebar.file_uploader("Selecionar Planilha de Ontem", type=["xlsx"])
@@ -27,35 +14,45 @@ def carregar_planilhas():
     planilha_atual = None
 
     if upload_planilha_ontem is not None:
-        planilha_anterior = ler_todas_abas(upload_planilha_ontem)
+        planilha_anterior = pd.concat(pd.read_excel(upload_planilha_ontem, sheet_name=None, engine='openpyxl'), ignore_index=True)
 
     if upload_planilha_hoje is not None:
-        planilha_atual = ler_todas_abas(upload_planilha_hoje)
+        planilha_atual = pd.concat(pd.read_excel(upload_planilha_hoje, sheet_name=None, engine='openpyxl'), ignore_index=True)
 
     return planilha_anterior, planilha_atual
 
+# Função para executar o código principal
 def executar_codigo(planilha_anterior, planilha_atual):
     try:
+        # Considerando que a coluna chave para identificar os lotes seja 'Lote'
         coluna_chave = 'Lote'
+
+        # Encontrar os lotes novos que estão na planilha atual, mas não estavam na planilha anterior
         novos_lotes = planilha_atual[~planilha_atual[coluna_chave].isin(planilha_anterior[coluna_chave])]
 
+        # Criar uma nova planilha Excel
         nome_arquivo_saida = 'novos_lotes_identificados.xlsx'
         workbook = Workbook()
         sheet = workbook.active
         sheet.title = 'Planilha'
 
+        # Adicionar cabeçalho da planilha
         header = list(planilha_atual.columns)
         sheet.append(header)
 
+        # Copiar dados da planilha_atual para a nova planilha
         for r in dataframe_to_rows(planilha_atual, index=False, header=False):
             sheet.append(r)
 
+        # Aplicar formatação às linhas dos novos itens (linhas marcadas como novos)
         gray_fill = PatternFill(start_color='C0C0C0', end_color='C0C0C0', fill_type='solid')
         for row_idx, row in enumerate(sheet.iter_rows(min_row=2, min_col=1, max_col=sheet.max_column), start=2):
             if planilha_atual.loc[row_idx - 2, 'Lote'] in novos_lotes['Lote'].values:
                 for cell in row:
                     cell.fill = gray_fill
 
+        # Salvar a planilha em um objeto binário
+        from io import BytesIO
         output = BytesIO()
         workbook.save(output)
         workbook.close()
